@@ -47,7 +47,12 @@ const AppRoot = () => {
     useEffect(() => {
         const checkTmbStatus = async () => {
             try {
-                const tmb_status = await isTmbEnabled();
+                // TMB remote config is optional. Never keep the main app on the loader
+                // if that remote request is slow or unavailable.
+                const tmb_status = await Promise.race([
+                    isTmbEnabled(),
+                    new Promise<boolean>(resolve => window.setTimeout(() => resolve(false), 2500)),
+                ]);
                 const final_status = tmb_status || window.is_tmb_enabled === true;
 
                 setIsTmbEnabled(final_status);
