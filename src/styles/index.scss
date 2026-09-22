@@ -2,23 +2,149 @@
 @import 'https://fonts.googleapis.com/css?family=IBM+Plex+Sans:300,400,500,700&display=swap&subset=cyrillic,cyrillic-ext,latin-ext,vietnamese';
 @import 'https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap';
 
+:root {
+    --king-blue: #1677ff;
+    --king-blue-dark: #0b4fc7;
+    --king-blue-soft: rgba(22, 119, 255, 0.12);
+    --king-yellow: #f5b800;
+    --king-green: #16a34a;
+    --king-red: #dc2626;
+    --king-border: rgba(128, 128, 128, 0.22);
+    --king-radius: 14px;
+    --king-shadow: 0 8px 28px rgba(0, 0, 0, 0.10);
+}
+
 html,
-body {
-    height: 100%;
+body,
+#root {
+    min-height: 100%;
+    width: 100%;
     overflow-x: hidden;
 }
 
 body {
     font-family: 'IBM Plex Sans', sans-serif;
     background: var(--general-main-1);
-    // Respect safe-area (notch) on iOS and similar devices so header doesn't overlap status bar
+    color: var(--text-general);
     padding-top: env(safe-area-inset-top, 0);
     position: relative;
+    -webkit-font-smoothing: antialiased;
 }
 
 @supports (padding-top: constant(safe-area-inset-top)) {
     body {
         padding-top: constant(safe-area-inset-top);
+    }
+}
+
+/* KING visual system: consistent panels, controls and status states. */
+button,
+[role='button'] {
+    border-radius: 10px;
+    transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease;
+}
+
+button:not(:disabled):hover,
+[role='button']:not([aria-disabled='true']):hover {
+    transform: translateY(-1px);
+}
+
+input,
+textarea,
+select {
+    border-radius: 10px;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--king-blue) !important;
+    box-shadow: 0 0 0 3px var(--king-blue-soft);
+}
+
+/* Common card/panel hooks used by KING and imported feature modules. */
+.king-card,
+.king-panel,
+.king-box,
+.king-feature-card {
+    border: 1px solid var(--king-border);
+    border-radius: var(--king-radius);
+    box-shadow: var(--king-shadow);
+    background: var(--general-main-2);
+}
+
+.king-card,
+.king-feature-card {
+    padding: 16px;
+}
+
+.king-panel {
+    padding: 18px;
+}
+
+.king-primary {
+    background: var(--king-blue);
+    color: #fff;
+    border: 1px solid var(--king-blue);
+}
+
+.king-primary:hover {
+    background: var(--king-blue-dark);
+    box-shadow: 0 6px 18px rgba(22, 119, 255, 0.24);
+}
+
+.king-status-live {
+    border-left: 4px solid var(--king-green);
+}
+
+.king-status-warning {
+    border-left: 4px solid var(--king-yellow);
+}
+
+.king-status-error {
+    border-left: 4px solid var(--king-red);
+}
+
+.king-analysis-high {
+    border: 2px solid var(--king-blue);
+    background: var(--king-blue-soft);
+    border-radius: var(--king-radius);
+    padding: 18px;
+    font-weight: 700;
+}
+
+.king-analysis-low {
+    border: 2px solid var(--king-yellow);
+    background: rgba(245, 184, 0, 0.12);
+    border-radius: var(--king-radius);
+    padding: 18px;
+    font-weight: 700;
+}
+
+.king-value-xl {
+    display: block;
+    font-size: clamp(2rem, 8vw, 3.5rem);
+    line-height: 1;
+    font-weight: 700;
+}
+
+.king-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+@media (max-width: 640px) {
+    .king-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .king-card,
+    .king-panel,
+    .king-feature-card {
+        border-radius: 12px;
+        padding: 13px;
     }
 }
 
