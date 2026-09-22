@@ -132,7 +132,16 @@ const useTMB = (): UseTMBReturn => {
                 const url = is_staging
                     ? 'https://app-config-staging.firebaseio.com/remote_config/oauth/is_tmb_enabled.json'
                     : 'https://app-config-prod.firebaseio.com/remote_config/oauth/is_tmb_enabled.json';
-                const response = await fetch(url);
+                // Do not let remote TMB configuration block the whole application.
+                // A network stall must fall back to the normal app flow.
+                const controller = new AbortController();
+                const timeoutId = window.setTimeout(() => controller.abort(), 4000);
+                let response: Response;
+                try {
+                    response = await fetch(url, { signal: controller.signal });
+                } finally {
+                    window.clearTimeout(timeoutId);
+                }
                 const result = await response.json();
 
                 const isEnabled = !!result.dbot;
