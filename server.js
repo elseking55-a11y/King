@@ -1,10 +1,12 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 const port = Number(process.env.PORT) || 10000;
 const host = '0.0.0.0';
 const distDir = path.join(__dirname, 'dist');
+const indexFile = path.join(distDir, 'index.html');
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -26,6 +28,31 @@ const mimeTypes = {
   '.ttf': 'font/ttf',
 };
 
+function ensureBuildOutput() {
+  if (fs.existsSync(indexFile)) return true;
+
+  console.warn('KING dist/index.html is missing. Running the production build once before starting.');
+  const result = spawnSync('npm', ['run', 'build'], {
+    cwd: __dirname,
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  });
+
+  if (result.error) {
+    console.error('KING build could not start:', result.error);
+  }
+
+  return fs.existsSync(indexFile);
+}
+
+if (!ensureBuildOutput()) {
+  console.error('KING build output is still missing.');
+  console.error('Working directory:', process.cwd());
+  console.error('Server directory:', __dirname);
+  console.error('Expected file:', indexFile);
+  process.exit(1);
+}
+
 const server = http.createServer((req, res) => {
   if (req.url === '/health' || req.url === '/healthz') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -33,7 +60,15 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  const requestPath = decodeURIComponent((req.url || '/').split('?')[0]);
+  let requestPath;
+  try {
+    requestPath = decodeURIComponent((req.url || '/').split('?')[0]);
+  } catch {
+    res.writeHead(400);
+    res.end('Bad request');
+    return;
+  }
+
   const safePath = path.normalize(requestPath).replace(/^([.][.][/\\])+/, '');
   let filePath = path.join(distDir, safePath);
 
@@ -53,15 +88,7 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // SPA fallback: let React Router handle application routes.
-    filePath = path.join(distDir, 'index.html');
-
-    if (!fs.existsSync(filePath)) {
-      res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('KING build output is missing.');
-      return;
-    }
-
+    filePath = indexFile;
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     fs.createReadStream(filePath).pipe(res);
   } catch (error) {
